@@ -113,11 +113,11 @@ klik na komórkę → <input type="number"> → onBlur/Enter → zapisz → odś
 
 ## Kryteria zaliczenia etapu 2
 
-- [ ] Formularz projektu tworzy nowy projekt ze wszystkimi polami
-- [ ] Formularz pracownika tworzy nowego pracownika ze wszystkimi polami
-- [ ] Delete Project usuwa projekt i odpisuje pracowników
-- [ ] Delete Employee usuwa pracownika i jego przypisania
-- [ ] Inline editing Position działa (dropdown)
-- [ ] Inline editing Salary działa (input, Enter, Escape)
-- [ ] Submit disabled do czasu poprawności formularza
-- [ ] Komunikaty błędów pojawiają się i znikają
+- [x] Formularz projektu tworzy nowy projekt ze wszystkimi polami
+- [x] Formularz pracownika tworzy nowego pracownika ze wszystkimi polami
+- [x] Delete Project usuwa projekt i odpisuje pracowników
+- [x] Delete Employee usuwa pracownika i jego przypisania
+- [x] Inline editing Position działa (dropdown)
+- [x] Inline editing Salary działa (input, Enter, Escape)
+- [x] Submit disabled do czasu poprawności formularza
+- [x] Komunikaty błędów pojawiają się i znikają

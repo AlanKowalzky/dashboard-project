@@ -180,23 +180,23 @@ node_modules/
 
 ## Checklist finalizacji
 
-- [ ] Brak błędów w konsoli (F12)
-- [ ] Wszystkie funkcje działają w deployed wersji
-- [ ] README.md kompletny
-- [ ] .gitignore dodany
-- [ ] GitHub Pages skonfigurowany
+- [x] Brak błędów w konsoli (F12)
+- [x] Wszystkie funkcje działają w deployed wersji
+- [x] README.md kompletny
+- [x] .gitignore dodany
+- [x] GitHub Pages skonfigurowany
 
 ---
 
 ## Kryteria zaliczenia etapu 5
 
-- [ ] Sortowanie asc/desc działa na obu tabelach
-- [ ] Ikony sortowania aktualizują się (⇅ ↑ ↓)
-- [ ] Filtry text działają dla Name, Surname, Company, Project
-- [ ] Filtr dropdown działa dla Position
-- [ ] Filter chips wyświetlają aktywne filtry
-- [ ] × na chipie usuwa filtr
-- [ ] "Clear Filters" pojawia się przy ≥ 2 filtrach
-- [ ] "See at Projects/Employees" nawiguje i filtruje
-- [ ] Sidebar zwija się i rozwija
-- [ ] Aplikacja działa na GitHub Pages bez błędów
+- [x] Sortowanie asc/desc działa na obu tabelach
+- [x] Ikony sortowania aktualizują się (⇅ ↑ ↓)
+- [x] Filtry text działają dla Name, Surname, Company, Project
+- [x] Filtr dropdown działa dla Position
+- [x] Filter chips wyświetlają aktywne filtry
+- [x] × na chipie usuwa filtr
+- [x] "Clear Filters" pojawia się przy ≥ 2 filtrach
+- [x] "See at Projects/Employees" nawiguje i filtruje
+- [x] Sidebar zwija się i rozwija
+- [x] Aplikacja działa na GitHub Pages bez błędów

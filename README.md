@@ -30,7 +30,7 @@ No build step required.
 
 ## Deployment
 
-GitHub Pages: [Live Demo](https://alankowalzky.github.io/dashboard-project/)
+GitHub Pages: https://alankowalzky.github.io/dashboard-project
 
 ## Notes
 

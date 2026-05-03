@@ -140,7 +140,13 @@ function initAddEmployeePanel() {
   const btn   = document.getElementById('add-employee-btn');
   const panel = document.getElementById('add-employee-panel');
   const form  = document.getElementById('add-employee-form');
-  btn.addEventListener('click', () => openPanel(panel));
+
+  console.log('initAddEmployeePanel: btn=', btn, 'panel=', panel);
+
+  btn.addEventListener('click', () => {
+    console.log('add-employee-btn clicked');
+    openPanel(panel);
+  });
   panel.querySelector('.panel-close').addEventListener('click', () => closePanel(panel));
   initFormValidation(form, validateEmployeeField, data => {
     const md = getMonthData(state.currentYear, state.currentMonth);

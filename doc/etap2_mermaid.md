@@ -1,109 +1,139 @@
-# Etap 2 — Diagramy Mermaid
+# Etap 2 — Diagramy z implementacji
 
-## 1. Przepływ dodawania projektu
+## 1. Architektura modułów po etapie 2
+
+```mermaid
+graph TD
+    MAIN[main.js] --> STORAGE[storage.js]
+    MAIN --> STATE[state.js]
+    MAIN --> VALID[validation.js]
+    MAIN --> PROJ[projects.js]
+    MAIN --> EMP[employees.js]
+    VALID --> PROJ
+    VALID --> EMP
+    STORAGE --> PROJ
+    STORAGE --> EMP
+    STATE --> PROJ
+    STATE --> EMP
+```
+
+## 2. renderProjectsTable — pipeline
 
 ```mermaid
 flowchart TD
-    BTN[Klik Add Project] --> PANEL[Otwórz slide-in panel]
-    PANEL --> INPUT[Użytkownik wypełnia pola]
-    INPUT --> VALIDATE{Walidacja\nreal-time}
-    VALIDATE -- błąd --> ERROR[Pokaż komunikat błędu\nDisable Submit]
-    VALIDATE -- OK --> ENABLE[Enable Submit]
-    ENABLE --> SUBMIT[Klik Submit]
-    SUBMIT --> SAVE[Zapisz projekt do localStorage]
-    SAVE --> CLOSE[Zamknij panel]
-    CLOSE --> REFRESH[Odśwież tabelę projektów]
+    CALL[renderProjectsTable] --> LOAD[getMonthData → employees projects]
+    LOAD --> EMPTY{projects.length == 0?}
+    EMPTY -- Tak --> EMPTYROW[No projects\ntotal-income empty string]
+    EMPTY -- Nie --> MAP[projects.map projectRow]
+    MAP --> ROW[projectRow p employees\ncalcProjectSummary → usedCap income\nusedCap > p.capacity → over-capacity\ncolorClass income\nassignedCount = filter has assignment]
+    ROW --> TOTAL[renderTotalIncome\ncalcTotalIncome → colorClass]
+    TOTAL --> BIND[bindProjectEvents\nbtn-delete-project\nbtn-show-employees]
 ```
 
-## 2. Przepływ dodawania pracownika
+## 3. renderEmployeesTable — pipeline
 
 ```mermaid
 flowchart TD
-    BTN[Klik Add Employee] --> PANEL[Otwórz slide-in panel]
-    PANEL --> INPUT[Wypełnij pola]
-    INPUT --> AGE{Wiek ≥ 18?}
-    AGE -- Nie --> ERRAGE[Błąd: za młody]
-    AGE -- Tak --> VALIDATE{Pozostałe\npola OK?}
-    VALIDATE -- Nie --> ERROTHER[Pokaż błędy]
-    VALIDATE -- Tak --> ENABLE[Enable Submit]
-    ENABLE --> SUBMIT[Klik Submit]
-    SUBMIT --> SAVE[Zapisz pracownika]
-    SAVE --> CLOSE[Zamknij panel]
-    CLOSE --> REFRESH[Odśwież tabelę pracowników]
+    CALL[renderEmployeesTable] --> LOAD[getMonthData → employees projects]
+    LOAD --> EMPTY{employees.length == 0?}
+    EMPTY -- Tak --> EMPTYROW[No employees]
+    EMPTY -- Nie --> MAP[employees.map employeeRow]
+    MAP --> ROW[employeeRow e projects\ncalcAge dob\ncalcEstimatedPayment e\ncalcEmployeeIncome e projects\ntotalCap = sum assignments.capacity\ntotalCap >= 1.5 → assign disabled\ncolorClass income]
+    ROW --> BIND[bindEmployeeEvents\nbtn-delete btn-show-assignments\ncell-position cell-salary\nbtn-assign btn-availability]
 ```
 
-## 3. Delete Project — przepływ
+## 4. initFormValidation — mechanizm walidacji
+
+```mermaid
+flowchart TD
+    INIT[initFormValidation\nform validateFn onValid] --> EACH[forEach input name\nonInput + onBlur]
+    EACH --> EVENT[zdarzenie]
+    EVENT --> CHECKFIELD[checkField input\nerr = validateFn name value.trim\nspan.textContent = err\nclassList.toggle invalid !!err\nreturn !err]
+    CHECKFIELD --> CHECKALL[checkAll\nevery input → validateFn\nsubmit.disabled = !allOk]
+    CHECKALL --> VALID{allOk?}
+    VALID -- Nie --> DISABLED[submit disabled]
+    VALID -- Tak --> ENABLED[submit enabled]
+    ENABLED --> SUBMIT[onSubmit\ne.preventDefault\nevery checkField]
+    SUBMIT --> ALLOK{wszystkie OK?}
+    ALLOK -- Nie --> STOP[return]
+    ALLOK -- Tak --> DATA[Object.fromEntries\ninputs.map i → name value.trim]
+    DATA --> CALLBACK[onValid data]
+    CALLBACK --> RESET[form.reset\nremove invalid classes\nclear field-errors\nsubmit.disabled = true]
+```
+
+## 5. validateProjectField — reguły
+
+```mermaid
+flowchart LR
+    NAME[projectName\nrequired min 3\nalphanumeric regex] --> ERR1[błąd lub empty string]
+    COMP[companyName\nrequired min 2\nalphanumeric regex] --> ERR2[błąd lub empty string]
+    BUDG[budget\nrequired > 0\nnot NaN] --> ERR3[błąd lub empty string]
+    CAP[capacity\nrequired\nNumber.isInteger >= 1] --> ERR4[błąd lub empty string]
+```
+
+## 6. validateEmployeeField — reguły
+
+```mermaid
+flowchart LR
+    NAME[name surname\nrequired min 3\nlitery + polskie znaki] --> ERR1[błąd lub empty]
+    DOB[dob\nrequired\nage = Date.now - new Date dob\nage < 18 → błąd] --> ERR2[błąd lub empty]
+    POS[position\nrequired\nPOSITIONS.includes value] --> ERR3[błąd lub empty]
+    SAL[salary\nrequired > 0\nnot NaN] --> ERR4[błąd lub empty]
+```
+
+## 7. inlineEditPosition — stany
+
+```mermaid
+stateDiagram-v2
+    [*] --> Display : renderEmployeesTable\ntd.cell-position tekst = position
+    Display --> Editing : klik\ncell.querySelector select → guard\ncell.textContent = empty\ncreate select z opcjami\ncurrent option selected\nsel.focus
+    Editing --> Saving : onChange lub onBlur
+    Saving --> Display : getMonthData\nemp.position = sel.value\nsaveMonthData\nrenderEmployeesTable
+```
+
+## 8. inlineEditSalary — stany
+
+```mermaid
+stateDiagram-v2
+    [*] --> Display : renderEmployeesTable\ntd.cell-salary tekst = fmt salary
+    Display --> Editing : klik\ncell.querySelector input → guard\noriginal = cell.textContent\ncreate input number\ninp.focus inp.select
+    Editing --> Saving : onBlur lub Enter → inp.blur
+    Editing --> Display : Escape\ncell.textContent = original
+    Saving --> Validate : parseFloat inp.value
+    Validate --> Save : val > 0 i not NaN\nemp.salary = val\nsaveMonthData
+    Validate --> Display : niepoprawna wartość\npomiń zapis
+    Save --> Display : renderEmployeesTable
+```
+
+## 9. deleteProject — sekwencja
 
 ```mermaid
 sequenceDiagram
     participant U as Użytkownik
     participant T as Tabela
-    participant D as Dialog
-    participant DB as Storage
+    participant DB as storage.js
+    participant V as renderActiveView
 
-    U->>T: Klik Delete (projekt)
-    T->>D: Confirm "Usuń projekt X?"
-    D-->>U: Wyświetl dialog
-    U->>D: Potwierdź
-    D->>DB: Usuń assignments pracowników
-    D->>DB: Usuń projekt
-    DB-->>T: Odśwież obie tabele
+    U->>T: klik btn-delete-project
+    T->>U: confirm Delete project X?
+    U->>T: OK
+    T->>DB: getMonthData
+    T->>DB: md.employees.forEach\nassignments.filter projectId != pid
+    T->>DB: md.projects.filter id != pid
+    T->>DB: saveMonthData
+    DB->>V: renderActiveView
 ```
 
-## 4. Inline editing — stany komórki
+## 10. calcTotalIncome — składowe
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Display: renderuj wartość
-    Display --> Editing: klik na komórkę
-    Editing --> Saving: blur / Enter
-    Editing --> Display: Escape (anuluj)
-    Saving --> Display: zapisz + odśwież
-```
-
-## 5. Walidacja formularza — maszyna stanów
-
-```mermaid
-stateDiagram-v2
-    [*] --> Pristine: formularz otwarty
-    Pristine --> Touched: pierwsze wpisanie
-    Touched --> Valid: wszystkie reguły OK
-    Touched --> Invalid: naruszenie reguły
-    Invalid --> Valid: poprawka
-    Valid --> Invalid: nowa zmiana
-    Valid --> Submitted: klik Submit
-    Submitted --> [*]: zamknij panel
-```
-
-## 6. Struktura tabeli projektów
-
-```mermaid
-graph LR
-    TABLE[table#projects-table] --> THEAD[thead]
-    TABLE --> TBODY[tbody]
-    THEAD --> TH1[Company ⇅⌕]
-    THEAD --> TH2[Project ⇅⌕]
-    THEAD --> TH3[Budget ⇅]
-    THEAD --> TH4[Capacity ⇅]
-    THEAD --> TH5[Employees]
-    THEAD --> TH6[Income ⇅]
-    THEAD --> TH7[Actions]
-    TBODY --> TR[tr × N projektów]
-```
-
-## 7. Struktura tabeli pracowników
-
-```mermaid
-graph LR
-    TABLE[table#employees-table] --> THEAD[thead]
-    TABLE --> TBODY[tbody]
-    THEAD --> TH1[Name ⇅⌕]
-    THEAD --> TH2[Surname ⇅⌕]
-    THEAD --> TH3[Age ⇅]
-    THEAD --> TH4[Position ⇅⌕]
-    THEAD --> TH5[Salary ⇅]
-    THEAD --> TH6[Est. Payment ⇅]
-    THEAD --> TH7[Project]
-    THEAD --> TH8[Proj. Income ⇅]
-    THEAD --> TH9[Actions]
+flowchart TD
+    PROJ[projects.reduce\ncalcProjectSummary per p\nΣ income] --> PINCOME[projectsIncome]
+    EMP[employees.filter\nassignments.length == 0\nΣ salary × 0.5] --> BENCH[benchCosts]
+    PINCOME --> TOTAL[Total = projectsIncome - benchCosts]
+    BENCH --> TOTAL
+    TOTAL --> COLOR{colorClass total}
+    COLOR -- positive --> GREEN[klasa positive]
+    COLOR -- negative --> RED[klasa negative]
+    COLOR -- empty --> NEUTRAL[brak klasy]
 ```

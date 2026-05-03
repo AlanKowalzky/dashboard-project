@@ -1,14 +1,20 @@
 // ── bootstrap ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Dashboard: DOMContentLoaded fired');
+
   initSampleData();
   initPeriodSelectors();
   initSidebarToggle();
   initTabNav();
   initSeedData();
+
+  console.log('Dashboard: initializing panels...');
   initAddProjectPanel();
   initAddEmployeePanel();
+
   initTableHeaders();
   renderActiveView();
+  console.log('Dashboard: init complete');
 });
 
 // ── period selectors ────────────────────────────────────────────────────────
@@ -77,7 +83,11 @@ function openSeedPopup() {
     const rows = months.map(key => {
       const [y, m] = key.split('-');
       const d = data[key];
+      // tymczasowo podmień state żeby obliczenia używały właściwego okresu
+      const savedYear = state.currentYear, savedMonth = state.currentMonth;
+      state.currentYear = +y; state.currentMonth = +m;
       const total = calcTotalIncome(d.projects, d.employees);
+      state.currentYear = savedYear; state.currentMonth = savedMonth;
       const tClass = colorClass(total);
       return `
         <tr>
@@ -121,12 +131,12 @@ function renderActiveView() {
   const pv = document.getElementById('projects-view');
   const ev = document.getElementById('employees-view');
   if (state.activeTab === 'projects') {
-    pv.hidden = false;
-    ev.hidden = true;
+    pv.removeAttribute('hidden');
+    ev.setAttribute('hidden', '');
     renderProjectsTable();
   } else {
-    pv.hidden = true;
-    ev.hidden = false;
+    pv.setAttribute('hidden', '');
+    ev.removeAttribute('hidden');
     renderEmployeesTable();
   }
   restoreSortIcons();
@@ -322,14 +332,17 @@ function applySortEmployees(employees, projects) {
 
 // ── panel helpers ────────────────────────────────────────────────────────────
 function openPanel(panel) {
-  panel.hidden = false;
-  document.getElementById('panel-overlay').hidden = false;
-  document.getElementById('panel-overlay').onclick = () => closePanel(panel);
+  panel.classList.add('open');
+  panel.style.display = 'flex'; // explicit fallback
+  const overlay = document.getElementById('panel-overlay');
+  overlay.classList.add('open');
+  overlay.onclick = () => closePanel(panel);
 }
 
 function closePanel(panel) {
-  panel.hidden = true;
-  document.getElementById('panel-overlay').hidden = true;
+  panel.classList.remove('open');
+  panel.style.display = '';
+  document.getElementById('panel-overlay').classList.remove('open');
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

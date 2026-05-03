@@ -80,7 +80,12 @@ function initAddProjectPanel() {
   const panel = document.getElementById('add-project-panel');
   const form  = document.getElementById('add-project-form');
 
-  btn.addEventListener('click', () => openPanel(panel));
+  console.log('initAddProjectPanel: btn=', btn, 'panel=', panel);
+
+  btn.addEventListener('click', () => {
+    console.log('add-project-btn clicked');
+    openPanel(panel);
+  });
   panel.querySelector('.panel-close').addEventListener('click', () => closePanel(panel));
 
   initFormValidation(form, validateProjectField, data => {

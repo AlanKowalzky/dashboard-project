@@ -1,5 +1,6 @@
 /* ── reset & base ─────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
   --sidebar-w: 220px;
@@ -316,9 +317,13 @@ td.empty {
   flex-direction: column;
   transform: translateX(100%);
   transition: transform var(--transition);
+  visibility: hidden;
 }
 
-.slide-panel:not([hidden]) { transform: translateX(0); }
+.slide-panel.open {
+  transform: translateX(0);
+  visibility: visible;
+}
 
 .panel-header {
   display: flex;
@@ -353,7 +358,9 @@ td.empty {
   inset: 0;
   background: rgba(0,0,0,.3);
   z-index: 199;
+  display: none;
 }
+.panel-overlay.open { display: block; }
 
 /* ── form fields ──────────────────────────────────────────────────────────── */
 .field {
@@ -582,12 +589,8 @@ input[type="range"] {
 .fp-actions { display: flex; gap: 6px; }
 
 /* ── actions column ───────────────────────────────────────────────────────── */
-td.actions {
-  white-space: nowrap;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
+td.actions { white-space: nowrap; }
+td.actions button { margin-right: 2px; }
 
 /* ── sort icon active state persists after re-render ─────────────────────── */
 .sort-icon.active { opacity: 1; color: var(--accent); }

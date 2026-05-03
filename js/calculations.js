@@ -35,7 +35,7 @@ function calcProjectSummaryFull(p, employees) {
   employees.forEach(e => {
     const a = e.assignments.find(x => x.projectId === p.id);
     if (!a) return;
-    const vc = getVacationCoefficient(year, month, e.vacationDays);
+    const vc = getVacationCoefficient(year, month, e.vacationDays || []);
     usedCap   += getEffectiveCapacity(a.capacity, a.fit, vc);
     totalCost += getEmployeeCost(e.salary, a.capacity);
   });

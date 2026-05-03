@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initSidebarToggle();
   initTabNav();
   initSeedData();
+  initAddProjectPanel();
+  initAddEmployeePanel();
   renderActiveView();
 });
 
@@ -127,7 +129,19 @@ function renderActiveView() {
   }
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── panel helpers ────────────────────────────────────────────────────────────
+function openPanel(panel) {
+  panel.hidden = false;
+  document.getElementById('panel-overlay').hidden = false;
+  document.getElementById('panel-overlay').onclick = () => closePanel(panel);
+}
+
+function closePanel(panel) {
+  panel.hidden = true;
+  document.getElementById('panel-overlay').hidden = true;
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
 function monthName(m) {
   return ['January','February','March','April','May','June',
           'July','August','September','October','November','December'][m];

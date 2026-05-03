@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee & Project Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Dashboard</span>
+        <button id="sidebar-toggle" title="Toggle sidebar">☰</button>
+      </div>
+
+      <div class="sidebar-body">
+        <div class="period-selectors">
+          <label>
+            Month
+            <select id="month-select">
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+          </label>
+          <label>
+            Year
+            <select id="year-select">
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </label>
+        </div>
+
+        <nav class="tab-nav">
+          <button data-tab="projects">📁 Projects</button>
+          <button data-tab="employees">👥 Employees</button>
+        </nav>
+
+        <button id="seed-data-btn" class="btn-secondary">🌱 Seed Data</button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ────────────────────────────────────── -->
+    <main id="content">
+
+      <!-- Projects view -->
+      <div id="projects-view">
+        <div class="view-header">
+          <h1>Projects</h1>
+          <button id="add-project-btn" class="btn-primary">+ Add Project</button>
+        </div>
+        <div id="projects-filter-chips" class="filter-chips"></div>
+        <div class="table-wrapper">
+          <table id="projects-table">
+            <thead>
+              <tr>
+                <th>Company <span class="sort-icon" data-col="companyName">⇅</span><span class="filter-icon" data-col="companyName">⌕</span></th>
+                <th>Project <span class="sort-icon" data-col="projectName">⇅</span><span class="filter-icon" data-col="projectName">⌕</span></th>
+                <th>Budget <span class="sort-icon" data-col="budget">⇅</span></th>
+                <th>Capacity <span class="sort-icon" data-col="capacity">⇅</span></th>
+                <th>Employees</th>
+                <th>Est. Income <span class="sort-icon" data-col="income">⇅</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="total-income" class="total-income"></div>
+      </div>
+
+      <!-- Employees view -->
+      <div id="employees-view" hidden>
+        <div class="view-header">
+          <h1>Employees</h1>
+          <button id="add-employee-btn" class="btn-primary">+ Add Employee</button>
+        </div>
+        <div id="employees-filter-chips" class="filter-chips"></div>
+        <div class="table-wrapper">
+          <table id="employees-table">
+            <thead>
+              <tr>
+                <th>Name <span class="sort-icon" data-col="name">⇅</span><span class="filter-icon" data-col="name">⌕</span></th>
+                <th>Surname <span class="sort-icon" data-col="surname">⇅</span><span class="filter-icon" data-col="surname">⌕</span></th>
+                <th>Age <span class="sort-icon" data-col="age">⇅</span></th>
+                <th>Position <span class="sort-icon" data-col="position">⇅</span><span class="filter-icon" data-col="position">⌕</span></th>
+                <th>Salary <span class="sort-icon" data-col="salary">⇅</span></th>
+                <th>Est. Payment <span class="sort-icon" data-col="payment">⇅</span></th>
+                <th>Projects</th>
+                <th>Proj. Income <span class="sort-icon" data-col="projIncome">⇅</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── SLIDE-IN PANELS ─────────────────────────────────── -->
+    <div id="add-project-panel" class="slide-panel" hidden>
+      <div class="panel-header">
+        <h2>Add Project</h2>
+        <button class="panel-close">×</button>
+      </div>
+      <form id="add-project-form" novalidate>
+        <div class="field">
+          <label>Project Name</label>
+          <input type="text" name="projectName" autocomplete="off" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Company Name</label>
+          <input type="text" name="companyName" autocomplete="off" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Budget</label>
+          <input type="number" name="budget" min="0" step="0.01" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Employee Capacity</label>
+          <input type="number" name="capacity" min="1" step="1" />
+          <span class="field-error"></span>
+        </div>
+        <button type="submit" class="btn-primary" disabled>Add Project</button>
+      </form>
+    </div>
+
+    <div id="add-employee-panel" class="slide-panel" hidden>
+      <div class="panel-header">
+        <h2>Add Employee</h2>
+        <button class="panel-close">×</button>
+      </div>
+      <form id="add-employee-form" novalidate>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" name="name" autocomplete="off" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Surname</label>
+          <input type="text" name="surname" autocomplete="off" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" name="dob" />
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Position</label>
+          <select name="position">
+            <option value="">— select —</option>
+            <option>Junior</option>
+            <option>Middle</option>
+            <option>Senior</option>
+            <option>Lead</option>
+            <option>Architect</option>
+            <option>BO</option>
+          </select>
+          <span class="field-error"></span>
+        </div>
+        <div class="field">
+          <label>Salary</label>
+          <input type="number" name="salary" min="0" step="0.01" />
+          <span class="field-error"></span>
+        </div>
+        <button type="submit" class="btn-primary" disabled>Add Employee</button>
+      </form>
+    </div>
+
+    <div id="panel-overlay" class="panel-overlay" hidden></div>
+
+  </div><!-- #app -->
+
+  <script src="js/storage.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/employees.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

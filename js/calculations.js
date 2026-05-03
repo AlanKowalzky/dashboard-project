@@ -92,5 +92,5 @@ function colorClass(value) {
   return '';
 }
 
-function fmt(n)  { return Number(n).toFixed(2); }
+function fmt(n)  { return '$' + Number(n).toFixed(2); }
 function esc(s)  { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

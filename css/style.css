@@ -162,6 +162,12 @@ body {
 
 .view-header h1 { font-size: 22px; font-weight: 600; }
 
+.view-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* ── table ────────────────────────────────────────────────────────────────── */
 .table-wrapper {
   background: var(--surface);
@@ -618,3 +624,14 @@ td.over-capacity { font-weight: 700; }
   padding: 4px 0 0;
   letter-spacing: .3px;
 }
+
+/* ── center-align specific columns ───────────────────────────────────────── */
+#projects-table th:nth-child(4),
+#projects-table td:nth-child(4),
+#projects-table th:nth-child(5),
+#projects-table td:nth-child(5),
+#projects-table th:nth-child(7),
+#projects-table td:nth-child(7) { text-align: center; }
+
+#employees-table th:nth-child(9),
+#employees-table td:nth-child(9) { text-align: center; }

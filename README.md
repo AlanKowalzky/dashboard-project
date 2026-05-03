@@ -30,7 +30,7 @@ No build step required.
 
 ## Deployment
 
-GitHub Pages: `https://<username>.github.io/dashboard2`
+GitHub Pages: [Live Demo](https://alankowalzky.github.io/dashboard-project/)
 
 ## Notes
 

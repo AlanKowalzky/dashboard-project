@@ -84,31 +84,7 @@ function initAddProjectPanel() {
   });
 }
 
-// ── show employees popup (stub — filled etap 3) ──────────────────────────────
-function openShowEmployeesPopup(pid) {
-  const { employees, projects } = getMonthData(state.currentYear, state.currentMonth);
-  const p = projects.find(x => x.id === pid);
-  const assigned = employees.filter(e => e.assignments.some(a => a.projectId === pid));
-
-  const overlay = document.createElement('div');
-  overlay.className = 'overlay';
-  overlay.innerHTML = `
-    <div class="popup details-popup">
-      <button class="popup-close">×</button>
-      <h2>Employees on: ${esc(p.projectName)}</h2>
-      ${assigned.length === 0
-        ? '<p class="empty">No employees assigned.</p>'
-        : `<table><thead><tr><th>Name</th><th>Capacity</th><th>Fit</th></tr></thead>
-           <tbody>${assigned.map(e => {
-             const a = e.assignments.find(x => x.projectId === pid);
-             return `<tr><td>${esc(e.name)} ${esc(e.surname)}</td><td>${a.capacity.toFixed(2)}</td><td>${a.fit.toFixed(2)}</td></tr>`;
-           }).join('')}</tbody></table>`
-      }
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.querySelector('.popup-close').addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-}
+// openShowEmployeesPopup → popups.js
 
 // ── calculations (used here, full version in etap 4) ─────────────────────────
 function calcProjectSummary(p, employees) {

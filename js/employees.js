@@ -160,34 +160,7 @@ function initAddEmployeePanel() {
   });
 }
 
-// ── show assignments popup (stub — filled etap 3) ─────────────────────────────
-function openShowAssignmentsPopup(eid) {
-  const { employees, projects } = getMonthData(state.currentYear, state.currentMonth);
-  const e = employees.find(x => x.id === eid);
-
-  const overlay = document.createElement('div');
-  overlay.className = 'overlay';
-  overlay.innerHTML = `
-    <div class="popup details-popup">
-      <button class="popup-close">×</button>
-      <h2>Assignments: ${esc(e.name)} ${esc(e.surname)}</h2>
-      ${e.assignments.length === 0
-        ? '<p class="empty">No assignments.</p>'
-        : `<table><thead><tr><th>Project</th><th>Capacity</th><th>Fit</th></tr></thead>
-           <tbody>${e.assignments.map(a => {
-             const p = projects.find(x => x.id === a.projectId);
-             return `<tr><td>${p ? esc(p.projectName) : '?'}</td><td>${a.capacity.toFixed(2)}</td><td>${a.fit.toFixed(2)}</td></tr>`;
-           }).join('')}</tbody></table>`
-      }
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.querySelector('.popup-close').addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-}
-
-// ── stubs for etap 3 ──────────────────────────────────────────────────────────
-function openAssignPopup(eid, btn) { /* etap 3 */ }
-function openCalendarPopup(eid)    { /* etap 3 */ }
+// openShowAssignmentsPopup, openAssignPopup, openCalendarPopup → popups.js / assign.js / calendar.js
 
 // ── calculations ──────────────────────────────────────────────────────────────
 function calcAge(dob) {

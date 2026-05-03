@@ -333,19 +333,4 @@ function navigateTo(tab, filters) {
   renderActiveView();
 }
 
-// ── full project summary (returns revenuePerUnit too) ─────────────────────────
-function calcProjectSummaryFull(p, employees) {
-  const year = state.currentYear, month = state.currentMonth;
-  let usedCap = 0, totalCost = 0;
-  employees.forEach(e => {
-    const a = e.assignments.find(x => x.projectId === p.id);
-    if (!a) return;
-    const vc = getVacationCoefficient(year, month, e.vacationDays);
-    usedCap   += a.capacity * a.fit * vc;
-    totalCost += e.salary * Math.max(0.5, a.capacity);
-  });
-  const capForRev    = Math.max(p.capacity, usedCap);
-  const revenuePerUnit = capForRev > 0 ? p.budget / capForRev : 0;
-  const totalRev     = revenuePerUnit * usedCap;
-  return { usedCap, revenuePerUnit, income: totalRev - totalCost };
-}
+// calcProjectSummaryFull, calcTotalIncome, getVacationCoefficient → calculations.js

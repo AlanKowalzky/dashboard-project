@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSeedData();
   initAddProjectPanel();
   initAddEmployeePanel();
+  initTableHeaders();
   renderActiveView();
 });
 
@@ -127,6 +128,172 @@ function renderActiveView() {
     ev.hidden = false;
     renderEmployeesTable();
   }
+}
+
+// ── filter chips ────────────────────────────────────────────────────────────
+function renderFilterChips(containerId, filters, onRemove) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const entries = Object.entries(filters);
+  if (entries.length === 0) { container.innerHTML = ''; return; }
+
+  const labels = {
+    companyName: 'Company', projectName: 'Project',
+    name: 'Name', surname: 'Surname', position: 'Position',
+  };
+
+  let html = entries.map(([k, v]) =>
+    `<span class="chip">${labels[k] || k}: ${esc(v)}
+      <button data-key="${k}">×</button>
+    </span>`
+  ).join('');
+
+  if (entries.length >= 2) {
+    html += `<span class="chip clear-all">Clear Filters <button data-key="__all__">×</button></span>`;
+  }
+
+  container.innerHTML = html;
+  container.querySelectorAll('button[data-key]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.key === '__all__') {
+        Object.keys(filters).forEach(k => delete filters[k]);
+        onRemove('__all__');
+      } else {
+        onRemove(btn.dataset.key);
+      }
+    });
+  });
+}
+
+// ── column sort & filter headers ─────────────────────────────────────────────
+function initTableHeaders() {
+  // sort icons
+  document.querySelectorAll('.sort-icon').forEach(icon => {
+    icon.addEventListener('click', () => {
+      const col   = icon.dataset.col;
+      const table = icon.closest('table').id;
+      const st    = table === 'projects-table' ? state.sortProjects : state.sortEmployees;
+
+      if (st.column === col) {
+        st.direction = st.direction === 'asc' ? 'desc' : st.direction === 'desc' ? null : 'asc';
+        if (st.direction === null) st.column = null;
+      } else {
+        st.column = col; st.direction = 'asc';
+      }
+
+      document.querySelectorAll(`#${table} .sort-icon`).forEach(i => {
+        i.classList.remove('active');
+        i.textContent = '⇅';
+      });
+      if (st.column) {
+        icon.classList.add('active');
+        icon.textContent = st.direction === 'asc' ? '↑' : '↓';
+      }
+      renderActiveView();
+    });
+  });
+
+  // filter icons
+  document.querySelectorAll('.filter-icon').forEach(icon => {
+    icon.addEventListener('click', e => {
+      e.stopPropagation();
+      openFilterPopup(icon);
+    });
+  });
+}
+
+function openFilterPopup(icon) {
+  document.getElementById('filter-popup')?.remove();
+  const col   = icon.dataset.col;
+  const table = icon.closest('table').id;
+  const filters = table === 'projects-table' ? state.filterProjects : state.filterEmployees;
+  const current = filters[col] || '';
+
+  const popup = document.createElement('div');
+  popup.id = 'filter-popup';
+  popup.className = 'filter-popup';
+
+  if (col === 'position') {
+    popup.innerHTML = `
+      <select id="fp-input">
+        <option value="">— all —</option>
+        ${['Junior','Middle','Senior','Lead','Architect','BO']
+          .map(p => `<option ${p === current ? 'selected' : ''}>${p}</option>`).join('')}
+      </select>
+      <div class="fp-actions"><button class="btn-sm fp-cancel">Cancel</button></div>`;
+  } else {
+    popup.innerHTML = `
+      <input id="fp-input" type="text" value="${esc(current)}" placeholder="Filter..." />
+      <div class="fp-actions">
+        <button class="btn-primary fp-apply">Apply</button>
+        <button class="btn-sm fp-cancel">Cancel</button>
+      </div>`;
+  }
+
+  document.body.appendChild(popup);
+  positionPopup(popup, icon);
+
+  const input = popup.querySelector('#fp-input');
+  input.focus();
+  if (input.select) input.select();
+
+  const apply = () => {
+    const val = input.value.trim();
+    if (val) filters[col] = val; else delete filters[col];
+    popup.remove();
+    renderActiveView();
+  };
+  const cancel = () => popup.remove();
+
+  popup.querySelector('.fp-apply')?.addEventListener('click', apply);
+  popup.querySelector('.fp-cancel').addEventListener('click', cancel);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') apply();
+    if (e.key === 'Escape') cancel();
+  });
+  if (col === 'position') input.addEventListener('change', apply);
+
+  setTimeout(() => {
+    document.addEventListener('mousedown', function h(e) {
+      if (!popup.contains(e.target) && e.target !== icon) {
+        popup.remove(); document.removeEventListener('mousedown', h);
+      }
+    });
+  }, 0);
+}
+
+// ── sort data ─────────────────────────────────────────────────────────────────
+function applySortProjects(projects, employees) {
+  const { column, direction } = state.sortProjects;
+  if (!column || !direction) return projects;
+  return [...projects].sort((a, b) => {
+    let va, vb;
+    if (column === 'income') {
+      va = calcProjectSummary(a, employees).income;
+      vb = calcProjectSummary(b, employees).income;
+    } else if (column === 'capacity') {
+      va = calcProjectSummary(a, employees).usedCap;
+      vb = calcProjectSummary(b, employees).usedCap;
+    } else {
+      va = a[column]; vb = b[column];
+    }
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+    return direction === 'asc' ? cmp : -cmp;
+  });
+}
+
+function applySortEmployees(employees, projects) {
+  const { column, direction } = state.sortEmployees;
+  if (!column || !direction) return employees;
+  return [...employees].sort((a, b) => {
+    let va, vb;
+    if (column === 'age')        { va = calcAge(a.dob);                    vb = calcAge(b.dob); }
+    else if (column === 'payment')    { va = calcEstimatedPayment(a);           vb = calcEstimatedPayment(b); }
+    else if (column === 'projIncome') { va = calcEmployeeIncome(a, projects);   vb = calcEmployeeIncome(b, projects); }
+    else                              { va = a[column]; vb = b[column]; }
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+    return direction === 'asc' ? cmp : -cmp;
+  });
 }
 
 // ── panel helpers ────────────────────────────────────────────────────────────

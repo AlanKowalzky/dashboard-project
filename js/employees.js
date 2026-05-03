@@ -3,13 +3,30 @@ function renderEmployeesTable() {
   const { employees, projects } = getMonthData(state.currentYear, state.currentMonth);
   const tbody = document.querySelector('#employees-table tbody');
 
-  if (employees.length === 0) {
+  let filtered = applyEmployeeFilters(employees);
+  filtered = applySortEmployees(filtered, projects);
+
+  renderFilterChips('employees-filter-chips', state.filterEmployees, key => {
+    delete state.filterEmployees[key];
+    renderEmployeesTable();
+  });
+
+  if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty">No employees for this period.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = employees.map(e => employeeRow(e, projects)).join('');
-  bindEmployeeEvents(tbody, employees, projects);
+  tbody.innerHTML = filtered.map(e => employeeRow(e, projects)).join('');
+  bindEmployeeEvents(tbody);
+}
+
+function applyEmployeeFilters(employees) {
+  const f = state.filterEmployees;
+  return employees.filter(e =>
+    Object.entries(f).every(([k, v]) =>
+      String(e[k] || '').toLowerCase().includes(v.toLowerCase())
+    )
+  );
 }
 
 function employeeRow(e, projects) {
@@ -17,7 +34,7 @@ function employeeRow(e, projects) {
   const payment  = calcEstimatedPayment(e);
   const income   = calcEmployeeIncome(e, projects);
   const totalCap = e.assignments.reduce((s, a) => s + a.capacity, 0);
-  const incClass = income >= 0 ? 'positive' : 'negative';
+  const incClass = colorClass(income);
   const assignDisabled = totalCap >= 1.5 ? 'disabled' : '';
 
   return `<tr data-eid="${e.id}">
@@ -25,7 +42,7 @@ function employeeRow(e, projects) {
     <td>${esc(e.surname)}</td>
     <td>${age}</td>
     <td class="cell-position" data-eid="${e.id}">${esc(e.position)}</td>
-    <td class="cell-salary" data-eid="${e.id}">${fmt(e.salary)}</td>
+    <td class="cell-salary"   data-eid="${e.id}">${fmt(e.salary)}</td>
     <td>${fmt(payment)}</td>
     <td><button class="btn-sm btn-show-assignments" data-eid="${e.id}">
       Show Assignments (${e.assignments.length}) ${totalCap.toFixed(1)}/1.5
@@ -39,23 +56,17 @@ function employeeRow(e, projects) {
   </tr>`;
 }
 
-function bindEmployeeEvents(tbody, employees, projects) {
+function bindEmployeeEvents(tbody) {
   tbody.querySelectorAll('.btn-delete-employee').forEach(btn =>
     btn.addEventListener('click', () => deleteEmployee(btn.dataset.eid)));
-
   tbody.querySelectorAll('.btn-show-assignments').forEach(btn =>
     btn.addEventListener('click', () => openShowAssignmentsPopup(btn.dataset.eid)));
-
   tbody.querySelectorAll('.cell-position').forEach(cell =>
     cell.addEventListener('click', () => inlineEditPosition(cell)));
-
   tbody.querySelectorAll('.cell-salary').forEach(cell =>
     cell.addEventListener('click', () => inlineEditSalary(cell)));
-
-  // btn-assign and btn-availability — stubs filled in etap 3
   tbody.querySelectorAll('.btn-assign').forEach(btn =>
     btn.addEventListener('click', () => openAssignPopup(btn.dataset.eid, btn)));
-
   tbody.querySelectorAll('.btn-availability').forEach(btn =>
     btn.addEventListener('click', () => openCalendarPopup(btn.dataset.eid)));
 }
@@ -66,7 +77,6 @@ function deleteEmployee(eid) {
   const e  = md.employees.find(x => x.id === eid);
   if (!e) return;
   if (!confirm(`Delete employee "${e.name} ${e.surname}"?\nAll assignments will be removed.`)) return;
-
   md.employees = md.employees.filter(x => x.id !== eid);
   saveMonthData(state.currentYear, state.currentMonth, md);
   renderActiveView();
@@ -77,7 +87,6 @@ function inlineEditPosition(cell) {
   if (cell.querySelector('select')) return;
   const eid = cell.dataset.eid;
   const current = cell.textContent.trim();
-
   const sel = document.createElement('select');
   ['Junior','Middle','Senior','Lead','Architect','BO'].forEach(p => {
     const opt = document.createElement('option');
@@ -85,18 +94,15 @@ function inlineEditPosition(cell) {
     if (p === current) opt.selected = true;
     sel.appendChild(opt);
   });
-
   cell.textContent = '';
   cell.appendChild(sel);
   sel.focus();
-
   function save() {
     const md = getMonthData(state.currentYear, state.currentMonth);
     const emp = md.employees.find(x => x.id === eid);
     if (emp) { emp.position = sel.value; saveMonthData(state.currentYear, state.currentMonth, md); }
     renderEmployeesTable();
   }
-
   sel.addEventListener('change', save);
   sel.addEventListener('blur', save);
 }
@@ -106,16 +112,13 @@ function inlineEditSalary(cell) {
   if (cell.querySelector('input')) return;
   const eid = cell.dataset.eid;
   const original = cell.textContent.trim();
-
   const inp = document.createElement('input');
   inp.type = 'number'; inp.min = '0'; inp.step = '0.01';
   inp.value = original;
   inp.style.cssText = 'width:90px;padding:2px 4px;font-size:13px;';
-
   cell.textContent = '';
   cell.appendChild(inp);
   inp.focus(); inp.select();
-
   function save() {
     const val = parseFloat(inp.value);
     if (!isNaN(val) && val > 0) {
@@ -125,7 +128,6 @@ function inlineEditSalary(cell) {
     }
     renderEmployeesTable();
   }
-
   inp.addEventListener('blur', save);
   inp.addEventListener('keydown', e => {
     if (e.key === 'Enter')  { inp.blur(); }
@@ -138,21 +140,15 @@ function initAddEmployeePanel() {
   const btn   = document.getElementById('add-employee-btn');
   const panel = document.getElementById('add-employee-panel');
   const form  = document.getElementById('add-employee-form');
-
   btn.addEventListener('click', () => openPanel(panel));
   panel.querySelector('.panel-close').addEventListener('click', () => closePanel(panel));
-
   initFormValidation(form, validateEmployeeField, data => {
     const md = getMonthData(state.currentYear, state.currentMonth);
     md.employees.push({
-      id: uid(),
-      name:     data.name,
-      surname:  data.surname,
-      dob:      data.dob,
-      position: data.position,
-      salary:   parseFloat(data.salary),
-      assignments: [],
-      vacationDays: [],
+      id: uid(), name: data.name, surname: data.surname,
+      dob: data.dob, position: data.position,
+      salary: parseFloat(data.salary),
+      assignments: [], vacationDays: [],
     });
     saveMonthData(state.currentYear, state.currentMonth, md);
     closePanel(panel);
@@ -160,38 +156,6 @@ function initAddEmployeePanel() {
   });
 }
 
-// openShowAssignmentsPopup, openAssignPopup, openCalendarPopup → popups.js / assign.js / calendar.js
-
-// ── calculations ──────────────────────────────────────────────────────────────
-function calcAge(dob) {
-  return Math.floor((Date.now() - new Date(dob)) / (365.25 * 24 * 3600 * 1000));
-}
-
-function calcEstimatedPayment(e) {
-  if (e.assignments.length === 0) return e.salary * 0.5;
-  return e.assignments.reduce((s, a) => s + e.salary * Math.max(0.5, a.capacity), 0);
-}
-
-function calcEmployeeIncome(e, projects) {
-  if (e.assignments.length === 0) return 0;
-  const year = state.currentYear, month = state.currentMonth;
-  const vacCoef = getVacationCoefficient(year, month, e.vacationDays);
-
-  return e.assignments.reduce((sum, a) => {
-    const p = projects.find(x => x.id === a.projectId);
-    if (!p) return sum;
-    const { employees: allEmp } = getMonthData(year, month);
-    const effCap = a.capacity * a.fit * vacCoef;
-    const usedCap = allEmp.reduce((s, emp) => {
-      const ea = emp.assignments.find(x => x.projectId === p.id);
-      if (!ea) return s;
-      const vc = getVacationCoefficient(year, month, emp.vacationDays);
-      return s + ea.capacity * ea.fit * vc;
-    }, 0);
-    const capForRev  = Math.max(p.capacity, usedCap);
-    const revPerUnit = capForRev > 0 ? p.budget / capForRev : 0;
-    const rev  = revPerUnit * effCap;
-    const cost = e.salary * Math.max(0.5, a.capacity);
-    return sum + rev - cost;
-  }, 0);
-}
+// openShowAssignmentsPopup → popups.js
+// openAssignPopup          → assign.js
+// openCalendarPopup        → calendar.js

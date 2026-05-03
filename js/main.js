@@ -77,14 +77,15 @@ function openSeedPopup() {
     const rows = months.map(key => {
       const [y, m] = key.split('-');
       const d = data[key];
+      const total = calcTotalIncome(d.projects, d.employees);
+      const tClass = colorClass(total);
       return `
         <tr>
           <td>${monthName(+m)} ${y}</td>
           <td>${d.projects.length} projects</td>
           <td>${d.employees.length} employees</td>
-          <td>
-            <button class="btn-seed" data-year="${y}" data-month="${m}">Seed</button>
-          </td>
+          <td class="${tClass}">${fmt(total)}</td>
+          <td><button class="btn-seed" data-year="${y}" data-month="${m}">Seed</button></td>
         </tr>`;
     }).join('');
 
@@ -92,7 +93,7 @@ function openSeedPopup() {
       <div class="popup seed-popup">
         <button class="popup-close">×</button>
         <h2>Seed Data</h2>
-        <table><thead><tr><th>Period</th><th>Projects</th><th>Employees</th><th></th></tr></thead>
+        <table><thead><tr><th>Period</th><th>Projects</th><th>Employees</th><th>Est. Income</th><th></th></tr></thead>
         <tbody>${rows}</tbody></table>
       </div>`;
   }
@@ -128,6 +129,29 @@ function renderActiveView() {
     ev.hidden = false;
     renderEmployeesTable();
   }
+  restoreSortIcons();
+  const lbl = document.getElementById('current-period-label');
+  if (lbl) lbl.textContent = `${monthName(state.currentMonth)} ${state.currentYear}`;
+}
+
+function restoreSortIcons() {
+  const tables = [
+    { id: 'projects-table',  st: state.sortProjects },
+    { id: 'employees-table', st: state.sortEmployees },
+  ];
+  tables.forEach(({ id, st }) => {
+    document.querySelectorAll(`#${id} .sort-icon`).forEach(i => {
+      i.classList.remove('active');
+      i.textContent = '\u21c5';
+    });
+    if (st.column && st.direction) {
+      const active = document.querySelector(`#${id} .sort-icon[data-col="${st.column}"]`);
+      if (active) {
+        active.classList.add('active');
+        active.textContent = st.direction === 'asc' ? '\u2191' : '\u2193';
+      }
+    }
+  });
 }
 
 // ── filter chips ────────────────────────────────────────────────────────────

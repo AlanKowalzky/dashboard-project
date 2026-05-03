@@ -6,7 +6,7 @@ function openShowEmployeesPopup(pid) {
     .filter(e => e.assignments.some(a => a.projectId === pid))
     .sort((a, b) => a.surname.localeCompare(b.surname));
 
-  const { usedCap, revenuePerUnit } = calcProjectSummaryFull(p, employees);
+  let { usedCap, revenuePerUnit } = calcProjectSummaryFull(p, employees);
 
   function buildRows() {
     if (assigned.length === 0) return '<tr><td colspan="9" class="empty">No employees assigned.</td></tr>';
@@ -17,7 +17,7 @@ function openShowEmployeesPopup(pid) {
       const rev     = revenuePerUnit * effCap;
       const cost    = e.salary * Math.max(0.5, a.capacity);
       const profit  = rev - cost;
-      const pClass  = profit >= 0 ? 'positive' : 'negative';
+      const pClass  = colorClass(profit);
       return `<tr>
         <td><a class="action-link" data-eid="${e.id}" href="#">${esc(e.name)} ${esc(e.surname)}</a></td>
         <td>${a.capacity.toFixed(2)}</td>
@@ -94,11 +94,6 @@ function openShowEmployeesPopup(pid) {
     revenuePerUnit = r.revenuePerUnit;
     renderActiveView();
   }
-
-  // make revenuePerUnit mutable
-  let { revenuePerUnit: rpu } = calcProjectSummaryFull(p, employees);
-  // shadow outer
-  Object.defineProperty(overlay, '_rpu', { writable: true, value: rpu });
 
   document.body.appendChild(overlay);
   render();

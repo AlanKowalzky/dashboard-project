@@ -13,7 +13,8 @@ function renderProjectsTable() {
 
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty">No projects for this period.</td></tr>';
-    document.getElementById('total-income').textContent = '';
+    const ti = document.getElementById('total-income');
+    ti.className = 'total-income'; ti.textContent = '';
     return;
   }
 

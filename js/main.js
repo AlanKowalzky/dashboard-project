@@ -65,9 +65,17 @@ function initSeedData() {
 }
 
 function openSeedPopup() {
-  const data = getData();
+  // Czytaj surowe dane bez tworzenia pustych wpisów przez getMonthData
+  const raw  = localStorage.getItem(STORAGE_KEY);
+  const data = raw ? JSON.parse(raw) : {};
   const currentKey = `${state.currentYear}-${state.currentMonth}`;
-  const months = Object.keys(data).filter(k => k !== currentKey);
+
+  // Tylko miesiące z rzeczywistymi danymi (przynajmniej 1 projekt lub pracownik)
+  const months = Object.keys(data).filter(k => {
+    if (k === currentKey) return false;
+    const d = data[k];
+    return d && (d.projects?.length > 0 || d.employees?.length > 0);
+  });
 
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
@@ -83,17 +91,16 @@ function openSeedPopup() {
     const rows = months.map(key => {
       const [y, m] = key.split('-');
       const d = data[key];
-      // tymczasowo podmień state żeby obliczenia używały właściwego okresu
       const savedYear = state.currentYear, savedMonth = state.currentMonth;
       state.currentYear = +y; state.currentMonth = +m;
-      const total = calcTotalIncome(d.projects, d.employees);
+      const total = calcTotalIncome(d.projects || [], d.employees || []);
       state.currentYear = savedYear; state.currentMonth = savedMonth;
       const tClass = colorClass(total);
       return `
         <tr>
           <td>${monthName(+m)} ${y}</td>
-          <td>${d.projects.length} projects</td>
-          <td>${d.employees.length} employees</td>
+          <td>${(d.projects || []).length} projects</td>
+          <td>${(d.employees || []).length} employees</td>
           <td class="${tClass}">${fmt(total)}</td>
           <td><button class="btn-seed" data-year="${y}" data-month="${m}">Seed</button></td>
         </tr>`;
@@ -109,7 +116,6 @@ function openSeedPopup() {
   }
 
   document.body.appendChild(overlay);
-
   overlay.querySelector('.popup-close').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 

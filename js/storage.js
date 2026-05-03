@@ -15,8 +15,7 @@ function saveData(data) {
 function getMonthData(year, month) {
   const data = getData();
   const key = `${year}-${month}`;
-  if (!data[key]) data[key] = { employees: [], projects: [] };
-  return data[key];
+  return data[key] || { employees: [], projects: [] };
 }
 
 function saveMonthData(year, month, monthData) {
